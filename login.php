@@ -1,3 +1,33 @@
+<?php
+session_start();
+include 'conexao.php';
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email = $_POST['email'];
+    $senha = $_POST['senha'];
+
+    $sql = "SELECT id, senha FROM usuario WHERE email = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) {
+        $stmt->bind_result($id, $hashedPassword);
+        $stmt->fetch();
+
+        if (password_verify($senha, $hashedPassword)) {
+            $_SESSION['id'] = $id;
+            header("Location: menu.php?");
+            exit();
+        } else {
+            echo "<script>alert('Senha incorreta!');</script>";
+        }
+    } else {
+        echo "<script>alert('Usuário não encontrado!');</script>";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,13 +38,13 @@
 <body>
     <div class="container">
     <h2 class="title">Login</h2>
-    <form action="menu.php" method="POST">
+    <form method="POST">
         <div class="group">
-            <input type="text" name="username" required>
-            <label>Usuário</label>
+            <input type="email" name="email" required>
+            <label>Email</label>
         </div>
         <div class="group">
-            <input type="password" name="password" required>
+            <input type="password" name="senha" required>
             <label>Senha</label>
         </div>
         <button type="submit">Entrar</button>
