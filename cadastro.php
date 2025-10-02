@@ -1,3 +1,32 @@
+<?php
+session_start();
+include 'conexao.php';
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email = $_POST['email'];
+    $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
+
+    $consulta = "SELECT  * FROM usuario WHERE email = '$email'";
+    $stmt = $conn->prepare($consulta);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) {
+        echo "<script>alert('Erro: Email já cadastrado!');</script>";
+    }
+    else{
+        $sql = "INSERT INTO usuario (email, senha) VALUES (?, ?)";
+        $stmt2 = $conn->prepare($sql);
+        $stmt2->bind_param("ss", $email, $senha);
+        if ($stmt2->execute()) {
+            header("Location: login.php");
+            exit();
+        } else {
+            echo "<script>alert('Erro: Erro ao inserir usuário');</script>";
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,13 +37,13 @@
 <body>
     <div class="container">
     <h2 class="title">Cadastro</h2>
-    <form action="menu.php" method="POST">
+    <form method="POST">
         <div class="group">
-            <input type="text" name="username" required>
-            <label>Usuário</label>
+            <input type="email" name="email" required>
+            <label>Email</label>
         </div>
         <div class="group">
-            <input type="password" name="password" required>
+            <input type="password" name="senha" min="6" required>
             <label>Senha</label>
             <a class="esqueci-senha" href="esqueci_senha.php">Esqueceu a senha?</a>
         </div>
